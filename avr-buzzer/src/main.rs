@@ -2,7 +2,7 @@
 #![no_main]
 #![feature(abi_avr_interrupt)]
 
-use arduino_hal::delay_us;
+use arduino_hal::{delay_ms, delay_us};
 use arduino_hal::hal::port::Dynamic;
 use arduino_hal::port::mode::Output;
 use arduino_hal::port::Pin;
@@ -11,35 +11,12 @@ use core::cell;
 use panic_halt as _;
 use embedded_hal::serial::Read;
 use pwm_pca9685::nb::Error;
+use crate::Duration::{Eighth, Quarter};
+use crate::Note::*;
 
-
-#[arduino_hal::entry]
-fn main() -> ! {
-    let dp = arduino_hal::Peripherals::take().unwrap();
-    let pins = arduino_hal::pins!(dp);
-    let mut serial = arduino_hal::default_serial!(dp, pins, 57600);
-    let mut output = pins.d8.into_output().downgrade();
-
-    /*
-     * For examples (and inspiration), head to
-     *
-     *     https://github.com/Rahix/avr-hal/tree/main/examples
-     *
-     * NOTE: Not all examples were ported to all boards!  There is a good chance though, that code
-     * for a different board can be adapted for yours.  The Arduino Uno currently has the most
-     * examples available.
-     */
-
-    // let mut led = pins.d13.into_output();
-    let notes = [Note::C6, Note::D6, Note::E6, Note::F6, Note::G6, Note::A6, Note::B6, Note::C7];
-    loop {
-        for note in &notes {
-            tone(&mut serial, &mut output, note, 500);
-        }
-    }
-}
-
+#[derive(PartialEq)]
 enum Note {
+    Rest = 0,
     B0 = 31,
     C1 = 33,
     CS1 = 35,
@@ -131,9 +108,57 @@ enum Note {
     DS8 = 4978
 }
 
+enum Duration {
+    Full = 1,
+    Half = 2,
+    Quarter = 4,
+    Eighth = 8,
+    Sixteenth = 16
+}
+
+const MELODY: [(Note, Duration); 8] = [
+    (C4, Quarter),
+    (G3, Eighth),
+    (G3, Eighth),
+    (A3, Quarter),
+    (G3, Quarter),
+    (Rest, Quarter),
+    (B3, Quarter),
+    (C4, Quarter)
+];
+
+#[arduino_hal::entry]
+fn main() -> ! {
+    let dp = arduino_hal::Peripherals::take().unwrap();
+    let pins = arduino_hal::pins!(dp);
+    let mut serial = arduino_hal::default_serial!(dp, pins, 57600);
+    let mut output = pins.d8.into_output().downgrade();
+
+    /*
+     * For examples (and inspiration), head to
+     *
+     *     https://github.com/Rahix/avr-hal/tree/main/examples
+     *
+     * NOTE: Not all examples were ported to all boards!  There is a good chance though, that code
+     * for a different board can be adapted for yours.  The Arduino Uno currently has the most
+     * examples available.
+     */
+
+    // let mut led = pins.d13.into_output();
+    loop {
+        for (note, duration) in &MELODY {
+            tone(&mut serial, &mut output, note, 1000 / *duration as u32);
+        }
+    }
+}
+
 /// A super hacky version of the tone() function from the Arduino SDK using simple delays. A better
 /// version of this would probably utilize interrupts, which I'll have to figure out later.
 fn tone<T: core::fmt::Debug>(writer: &mut dyn ufmt::uWrite<Error=T>, output: &mut Pin<Output, Dynamic>, frequency: &Note, duration_in_millis: u32) {
+    if *frequency == Rest {
+        delay_ms(duration_in_millis as u16);
+        return
+    }
 
     let period_in_micros = 1_000_000 / *frequency as u32;
     let half_wave = period_in_micros / 2;
