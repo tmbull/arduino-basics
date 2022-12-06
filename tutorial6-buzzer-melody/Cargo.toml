@@ -1,12 +1,12 @@
 [package]
-name = "avr-buzzer"
+name = "tutorial6-buzzer-melody"
 version = "0.1.0"
-authors = ["Tristan Bull <tristan.bull@avalara.com>"]
+authors = ["Tristan Bull <tristan.m.bull@gmail.com>"]
 edition = "2021"
-license = "MIT OR Apache-2.0"
+license = "MIT"
 
 [[bin]]
-name = "avr-buzzer"
+name = "tutorial6-buzzer-melody"
 test = false
 bench = false
 
@@ -31,15 +31,4 @@ features = ["atmega328p", "rt"]
 version = "1.6.1"
 default-features = false
 
-# Configure the build for minimal size - AVRs have very little program memory
-[profile.dev]
-panic = "abort"
-lto = true
-opt-level = "s"
 
-[profile.release]
-panic = "abort"
-codegen-units = 1
-debug = true
-lto = true
-opt-level = "s"

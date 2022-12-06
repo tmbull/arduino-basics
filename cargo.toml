@@ -1,0 +1,23 @@
+[workspace]
+
+members = [
+  "tutorial6-buzzer-melody",
+  "tutorial7-7segment-countdown",
+  "tutorial3-digital-input",
+  "tutorial2-digital-outputs",
+  "tutorial4-led-game",
+  "tutorial5-voltage-meter"
+]
+
+# Configure the build for minimal size - AVRs have very little program memory
+[profile.dev]
+panic = "abort"
+lto = true
+opt-level = "s"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+debug = true
+lto = true
+opt-level = "s"

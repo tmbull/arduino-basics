@@ -50,7 +50,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "avr-fourleds"
+name = "tutorial2-digital-outputs"
 version = "0.1.0"
 dependencies = [
  "arduino-hal",
